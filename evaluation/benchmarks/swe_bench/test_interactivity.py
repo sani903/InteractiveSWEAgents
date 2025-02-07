@@ -10,7 +10,6 @@ import pandas as pd
 import toml
 
 import openhands.agenthub
-# from evaluation.swe_bench.prompt import CODEACT_SWE_PROMPT
 from evaluation.utils.shared import (
     EvalException,
     EvalMetadata,
@@ -44,7 +43,6 @@ RUN_WITH_BROWSING = os.environ.get('RUN_WITH_BROWSING', 'false').lower() == 'tru
 
 client = openai.OpenAI(
     api_key=os.environ['LITELLM_API_KEY'],
-    base_url='https://cmu.litellm.ai',
 )
 
 
@@ -67,15 +65,6 @@ class FakeUser:
         self.turns = 0
 
     def generate_reply(self, question):
-        # if self.turns > 3:
-        #     return 'Please continue working on the task. Do NOT ask for more help.'
-        # self.chat_history.append({'role': 'user', 'content': question.content})
-
-        # response = client.chat.completions.create(
-        #     model='neulab/gpt-4o-2024-08-06', messages=self.chat_history
-        # )
-        # reply = response.choices[0].message.content
-        # self.chat_history.append({'role': 'assistant', 'content': reply})
         self.turns += 1
         return ''
 
@@ -160,8 +149,6 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
             instruction += (
                 f'--- BEGIN HINTS ---\n{instance.hints_text}\n--- END HINTS ---\n'
             )
-        # instruction += CODEACT_SWE_PROMPT.format(workspace_dir_name=workspace_dir_name)
-        #  Do this, if required, in a separate message then wait for my response.
     else:
         instruction = (
             '<uploaded_files>\n'
@@ -174,6 +161,9 @@ def get_instruction(instance: pd.Series, metadata: EvalMetadata):
             'Can you help me implement the necessary changes to the repository so that the requirements specified in the <pr_description> are met?\n'
             "I've already taken care of all changes to any of the test files described in the <pr_description>. This means you DON'T have to modify the testing logic or any of the tests in any way!\n"
             'Your task is to make the minimal changes to non-tests files in the /repo directory to ensure the <pr_description> is satisfied.\n'
+            # Uncomment for different levels of encouragement
+            # 'Ensure you have all the necessary information to proceed. If any part of the issue is unclear or lacks critical details, ask targeted, concise questions to clarify. If everything is clear, you can move ahead without asking unnecessary questions.\n'
+            # 'Before attempting a solution, carefully check whether all key information is provided. If there’s any ambiguity or missing details that could impact your work, don’t hesitate to ask questions. Your goal is to gather the information needed for an accurate and efficient solution. Only skip asking questions when you are absolutely sure all details are complete.\n'
             'Your success depends on having all relevant details to solve the issue effectively. Whenever you encounter unclear or missing information, proactively ask questions to fill those gaps. Even minor ambiguities can affect the outcome, so always prioritize clarifying questions. Avoid questions only when you are 100% certain no further clarification is needed. Interact, if required, in a separate message then wait for my response.\n'
             'Follow these steps to resolve the issue:\n'
             '1. As a first step, look at the issue and ask me questions if you need any clarifications or have any doubts. If you choose to interact, wait for my response before proceeding with other tasks.\n'
@@ -372,17 +362,13 @@ def initialize_runtime(
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
     except Exception:
-        action = CmdRunAction(command='cd /workspace/')
+        alt_name = workspace_dir_name.rsplit('.0', 1)[0]
+        action = CmdRunAction(command=f'cd /workspace/{alt_name}')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
-        action = CmdRunAction(command='cd "$(ls | head -n 1)"')
-        action.timeout = 600
-        logger.info(action, extra={'msg_type': 'ACTION'})
-        obs = runtime.run_action(action)
-        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     if obs.exit_code != 0:
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
@@ -511,17 +497,7 @@ def process_instance(
         metadata=metadata,
         instance=instance: fake_user_response(state, metadata, instance),
     }
-    # df = pd.read_csv("data/fake_user_issues_under_0.csv")
-    # issue = df.loc[df['instance_id'] == instance["instance_id"], 'issue'].iloc[0]
-    # hidden_details_merged = df.loc[df['instance_id'] == instance["instance_id"], 'hidden_details'].iloc[0]
     original_issue = instance.original_issue
-    # hidden_details_merged = instance.hidden_details
-    # print(f"""
-    # These are the hidden_details: {hidden_details_merged}
-    # """)
-    # logger.info(f'These are the hidden_details: {hidden_details_merged}')
-    # delimiter = '|||'
-    # hidden_details_split = hidden_details_merged.split(delimiter)
     fake_user = FakeUser(issue=original_issue)
     # Setup the logger properly, so you can run multi-processing to parallelize the evaluation
     if reset_logger:
@@ -591,7 +567,6 @@ def process_instance(
         history=histories,
         metrics=metrics,
         error=state.last_error if state and state.last_error else None,
-        # num_turns=num_turns,
     )
     return output
 
@@ -636,7 +611,6 @@ if __name__ == '__main__':
 
     # NOTE: It is preferable to load datasets from huggingface datasets and perform post-processing
     # so we don't need to manage file uploading to OpenHands's repo
-    #    dataset = load_dataset(args.dataset, split=args.split)
     csv_filepath = args.csv_file
     dataset = pd.read_excel(csv_filepath)
     logger.info(f'Loaded dataset from {csv_filepath}')
