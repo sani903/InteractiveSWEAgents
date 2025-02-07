@@ -79,9 +79,6 @@ class FakeUser:
         return reply
 
 
-USE_HINT_TEXT = os.environ.get('USE_HINT_TEXT', 'false').lower() == 'true'
-USE_INSTANCE_IMAGE = os.environ.get('USE_INSTANCE_IMAGE', 'false').lower() == 'true'
-
 AGENT_CLS_TO_FAKE_USER_RESPONSE_FN = {
     'CodeActAgent': lambda state: fake_user_response(state),
     'CodeActSWEAgent': lambda state: fake_user_response(state),
