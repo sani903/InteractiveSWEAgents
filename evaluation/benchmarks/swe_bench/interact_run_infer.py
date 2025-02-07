@@ -41,8 +41,7 @@ USE_INSTANCE_IMAGE = os.environ.get('USE_INSTANCE_IMAGE', 'false').lower() == 't
 RUN_WITH_BROWSING = os.environ.get('RUN_WITH_BROWSING', 'false').lower() == 'true'
 
 client = openai.OpenAI(
-    api_key=os.environ['LITELLM_API_KEY'],
-    base_url='https://cmu.litellm.ai',
+    api_key=os.environ['API_KEY'],
 )
 
 
