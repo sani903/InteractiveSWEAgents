@@ -1,7 +1,7 @@
 
 # Interactive Agents To Overcome Ambiguity in Software Engineering
 
-This project focuses on interactive code generation in ambiguous settings. It evaluates how code generation agents handle ambiguity through structured experiments.
+This project focuses on interactive SWE agents in ambiguous settings. It evaluates how software engineering agents handle ambiguity through structured experiments.
 
 ## 🛠 Setup
 
