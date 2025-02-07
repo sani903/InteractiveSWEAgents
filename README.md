@@ -13,7 +13,8 @@ Ensure you have the necessary dependencies installed before running experiments.
 
 - `experiments/` – Contains the experiment code.
 - `evaluation/benchmarks/swe_bench/` – Contains scripts for running different evaluation settings.
-- `evaluation/benchmarks/swe_bench/scripts/{base/hidden/interact}_run_infer.sh` – Main script to run inference experiments.
+- `evaluation/benchmarks/swe_bench/scripts/{base/hidden/interact}_run_infer.sh` – Main script to run inference experiments for evaluating impact of interaction.
+- `evaluation/benchmarks/swe_bench/scripts/test_interactivity.sh` – Script to evaluate ambiguity detection with high/medium/low encouragement for interaction.
 
 ## 🚀 Running Experiments
 
