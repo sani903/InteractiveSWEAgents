@@ -20,11 +20,11 @@ Ensure you have the necessary dependencies installed before running experiments.
 To run experiments in **interaction, hidden, and full settings**, use the following command:
 
 ```bash
-./evaluation/benchmarks/swe_bench/scripts/run_infer.sh [model_config] [git-version] [agent] [eval_limit] [max_iter] [num_workers] [dataset] [dataset_split]
+./evaluation/benchmarks/swe_bench/scripts/{base/hidden/interact}_run_infer.sh [model_config] [git-version] [agent] [eval_limit] [max_iter] [num_workers] [dataset] [dataset_split]
 ```
 Example:
 ```bash
-./evaluation/benchmarks/swe_bench/scripts/run_infer.sh llm.eval_gpt4_1106_preview HEAD CodeActAgent 300 30 1 princeton-nlp/SWE-bench_Lite test
+./evaluation/benchmarks/swe_bench/scripts/base_run_infer.sh llm.eval_gpt4_1106_preview HEAD CodeActAgent 300 30 1 princeton-nlp/SWE-bench_Lite test
 ```
 
 ## 📊 Experiment Results & Logs
