@@ -322,7 +322,6 @@ def initialize_runtime(
         ), f'Failed to source /swe_util/swe_entry.sh: {obs.content}'
     try:
         action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
-        # action = CmdRunAction(command='cd /workspace/')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
@@ -380,7 +379,6 @@ def complete_runtime(
     workspace_dir_name = _get_swebench_workspace_dir_name(instance)
     try:
         action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
-        # action = CmdRunAction(command='cd /workspace/')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
