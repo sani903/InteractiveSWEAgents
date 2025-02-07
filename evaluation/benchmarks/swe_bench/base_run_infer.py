@@ -390,17 +390,13 @@ def complete_runtime(
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
     except Exception:
-        action = CmdRunAction(command='cd /workspace/')
+        alt_name = workspace_dir_name.rsplit('.0', 1)[0]
+        action = CmdRunAction(command=f'cd /workspace/{alt_name}')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
-        action = CmdRunAction(command='cd "$(ls | head -n 1)"')
-        action.timeout = 600
-        logger.info(action, extra={'msg_type': 'ACTION'})
-        obs = runtime.run_action(action)
-        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     if obs.exit_code != 0:
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
