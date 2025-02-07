@@ -47,29 +47,6 @@ client = openai.OpenAI(
 
 
 class FakeUser:
-    # def __init__(self, issue, hints, hidden_details):
-    #     self.system_message = f"""
-    #     You are a GitHub user reporting an issue. Here are the details of your issue and environment:
-
-    #     Issue: {issue}
-
-    #     Hints: {hints}
-
-    #     Hidden details (only reveal if specifically asked): {hidden_details}
-
-    #     Your task is to respond to questions from a coder who is trying to solve your issue. Follow these rules:
-    #     1. If the coder asks a question that is directly related to the hidden details, provide that information.
-    #     2. If the question is not related to the hidden details, respond based on the original issue description.
-    #     3. If you're unsure whether to reveal information, err on the side of caution and don't reveal it.
-    #     4. Always stay in character as a user reporting an issue, not as an AI assistant.
-    #     5. Keep your responses concise and to the point.
-    #     6. The coder has limited turns to solve the issue. Do not interact with the coder beyond 3 turns.
-
-    #     Respond with "I don't have that information" if the question is unrelated or you're unsure.
-    #     """
-    #     self.chat_history = [{'role': 'system', 'content': self.system_message}]
-    #     self.turns = 0
-
     def __init__(self, issue, hints, files):
         self.system_message = f"""
         You are a GitHub user reporting an issue. Here are the details of your issue and environment:
@@ -96,7 +73,7 @@ class FakeUser:
             return 'Please continue working on the task. Do NOT ask for more help.'
         self.chat_history.append({'role': 'user', 'content': question.content})
         response = client.chat.completions.create(
-            model='openai/neulab/meta-llama/Meta-Llama-3.1-405B-Instruct', messages=self.chat_history
+            model='gpt-4o-2024-05-13', messages=self.chat_history
         )
 
         reply = response.choices[0].message.content
@@ -273,7 +250,6 @@ def initialize_runtime(
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
         raise RuntimeError(f'Failed to initialize runtime: {obs.content}')
-    # assert obs.exit_code == 0
 
     action = CmdRunAction(command="""export USER=$(whoami); echo USER=${USER} """)
     action.timeout = 600
@@ -284,7 +260,6 @@ def initialize_runtime(
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
         raise RuntimeError(f'Failed to initialize runtime: {obs.content}')
-    #    assert obs.exit_code == 0
 
     if USE_INSTANCE_IMAGE:
         # inject the init script
@@ -350,24 +325,19 @@ def initialize_runtime(
         ), f'Failed to source /swe_util/swe_entry.sh: {obs.content}'
     try:
         action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
-        # action = CmdRunAction(command='cd /workspace/')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
     except Exception:
-        action = CmdRunAction(command='cd /workspace/')
+        alt_name = workspace_dir_name.rsplit('.0', 1)[0]
+        action = CmdRunAction(command=f'cd /workspace/{alt_name}')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
-        action = CmdRunAction(command='cd "$(ls | head -n 1)"')
-        action.timeout = 600
-        logger.info(action, extra={'msg_type': 'ACTION'})
-        obs = runtime.run_action(action)
-        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     if obs.exit_code != 0:
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
@@ -412,24 +382,19 @@ def complete_runtime(
     workspace_dir_name = _get_swebench_workspace_dir_name(instance)
     try:
         action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
-        # action = CmdRunAction(command='cd /workspace/')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
     except Exception:
-        action = CmdRunAction(command='cd /workspace/')
+        alt_name = workspace_dir_name.rsplit('.0', 1)[0]
+        action = CmdRunAction(command=f'cd /workspace/{alt_name}')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
-        action = CmdRunAction(command='cd "$(ls | head -n 1)"')
-        action.timeout = 600
-        logger.info(action, extra={'msg_type': 'ACTION'})
-        obs = runtime.run_action(action)
-        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     if obs.exit_code != 0:
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
@@ -489,17 +454,7 @@ def process_instance(
     config = get_config(instance, metadata)
     global fake_user
     original_issue = instance.original_issue
-    # hidden_details_merged = instance.hidden_details
-    # print(f"""
-    # These are the hidden_details: {hidden_details_merged}
-    # """)
-    # logger.info(f'These are the hidden_details: {hidden_details_merged}')
-    # delimiter = '|||'
-    # hidden_details_split = hidden_details_merged.split(delimiter)
     issue = str(original_issue)
-    # fake_user = FakeUser(
-    #     issue=issue, hints=instance.hints_text, hidden_details=instance.hidden_details
-    # )
     fake_user = FakeUser(issue=issue, hints=instance.hints_text, files=instance.files)
     # Setup the logger properly, so you can run multi-processing to parallelize the evaluation
     if reset_logger:
@@ -560,7 +515,6 @@ def process_instance(
 
     histories = [event_to_dict(event) for event in state.history]
     metrics = state.metrics.get() if state.metrics else None
-    # num_turns = sum(1 for _ in state.history.get_events()) if state else 0
     # Save the output
     output = EvalOutput(
         instance_id=instance.instance_id,
@@ -571,7 +525,6 @@ def process_instance(
         history=histories,
         metrics=metrics,
         error=state.last_error if state and state.last_error else None,
-        # num_turns=num_turns,
     )
     return output
 
@@ -616,7 +569,6 @@ if __name__ == '__main__':
 
     # NOTE: It is preferable to load datasets from huggingface datasets and perform post-processing
     # so we don't need to manage file uploading to OpenHands's repo
-    #    dataset = load_dataset(args.dataset, split=args.split)
     csv_filepath = args.csv_file
     dataset = pd.read_excel(csv_filepath)
     logger.info(f'Loaded dataset from {csv_filepath}')
