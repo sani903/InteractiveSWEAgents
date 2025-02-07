@@ -1,0 +1,59 @@
+# Installation
+
+## System Requirements
+
+- Docker version 26.0.0+ or Docker Desktop 4.31.0+.
+- You must be using Linux or Mac OS.
+  - If you are on Windows, you must use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+## Start the app
+
+The easiest way to run OpenHands is in Docker.
+
+```bash
+docker pull docker.all-hands.dev/all-hands-ai/runtime:0.20-nikolaik
+
+docker run -it --rm --pull=always \
+    -e SANDBOX_RUNTIME_CONTAINER_IMAGE=docker.all-hands.dev/all-hands-ai/runtime:0.20-nikolaik \
+    -e LOG_ALL_EVENTS=true \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v ~/.openhands-state:/.openhands-state \
+    -p 3000:3000 \
+    --add-host host.docker.internal:host-gateway \
+    --name openhands-app \
+    docker.all-hands.dev/all-hands-ai/openhands:0.20
+```
+
+You'll find OpenHands running at http://localhost:3000!
+
+You can also [connect OpenHands to your local filesystem](https://docs.all-hands.dev/modules/usage/runtimes#connecting-to-your-filesystem),
+run OpenHands in a scriptable [headless mode](https://docs.all-hands.dev/modules/usage/how-to/headless-mode),
+interact with it via a [friendly CLI](https://docs.all-hands.dev/modules/usage/how-to/cli-mode),
+or run it on tagged issues with [a github action](https://docs.all-hands.dev/modules/usage/how-to/github-action).
+
+## Setup
+
+Upon launching OpenHands, you'll see a settings modal. You **must** select an `LLM Provider` and `LLM Model` and enter a corresponding `API Key`.
+These can be changed at any time by selecting the `Settings` button (gear icon) in the UI.
+
+If the required `LLM Model` does not exist in the list, you can toggle `Advanced Options` and manually enter it with the correct prefix
+in the `Custom Model` text box.
+The `Advanced Options` also allow you to specify a `Base URL` if required.
+
+<div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+  <img src="/img/settings-screenshot.png" alt="settings-modal" width="340" />
+  <img src="/img/settings-advanced.png" alt="settings-modal" width="335" />
+</div>
+
+## Versions
+
+The command above pulls the most recent stable release of OpenHands. You have other options as well:
+- For a specific release, use `docker.all-hands.dev/all-hands-ai/openhands:$VERSION`, replacing $VERSION with the version number.
+- We use semver, and release major, minor, and patch tags. So `0.9` will automatically point to the latest `0.9.x` release, and `0` will point to the latest `0.x.x` release.
+- For the most up-to-date development version, you can use `docker.all-hands.dev/all-hands-ai/openhands:main`. This version is unstable and is recommended for testing or development purposes only.
+
+You can choose the tag that best suits your needs based on stability requirements and desired features.
+
+For the development workflow, see [Development.md](https://github.com/All-Hands-AI/OpenHands/blob/main/Development.md).
+
+Are you having trouble? Check out our [Troubleshooting Guide](https://docs.all-hands.dev/modules/usage/troubleshooting).
