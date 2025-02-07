@@ -27,6 +27,13 @@ Example:
 ```bash
 ./evaluation/benchmarks/swe_bench/scripts/base_run_infer.sh llm.eval_gpt4_1106_preview HEAD CodeActAgent 300 30 1 princeton-nlp/SWE-bench_Lite test
 ```
+Due to the dependence on OpenHands agentic framework, running the scripts smoothly might require pulling the latest updates from the OpenHands repository. To do this, set up OpenHands as an Upstream Remote.
+
+```bash
+git remote add upstream https://github.com/All-Hands-AI/OpenHands.git
+git fetch upstream
+git merge upstream/main
+```
 
 ## 📊 Experiment Results & Logs
 
