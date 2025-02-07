@@ -69,10 +69,6 @@ class FakeUser:
         return ''
 
 
-USE_HINT_TEXT = os.environ.get('USE_HINT_TEXT', 'false').lower() == 'true'
-USE_INSTANCE_IMAGE = os.environ.get('USE_INSTANCE_IMAGE', 'false').lower() == 'true'
-
-
 def update_instance_results(eval_output_dir, instance_id, output_value, gold_value):
     results_file = os.path.join(
         eval_output_dir, 'interactivity', 'interactivity_results.json'
