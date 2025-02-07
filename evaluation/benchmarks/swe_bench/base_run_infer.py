@@ -42,7 +42,6 @@ RUN_WITH_BROWSING = os.environ.get('RUN_WITH_BROWSING', 'false').lower() == 'tru
 
 client = openai.OpenAI(
     api_key=os.environ['LITELLM_API_KEY'],
-    base_url='https://cmu.litellm.ai',
 )
 
 
@@ -68,16 +67,7 @@ class FakeUser:
         self.chat_history = [{'role': 'system', 'content': self.system_message}]
 
     def generate_reply(self, question):
-        self.chat_history.append({'role': 'user', 'content': question})
-
-        response = client.chat.completions.create(
-            model='neulab/claude-3-5-sonnet-20240620', messages=self.chat_history
-        )
-
-        reply = response.choices[0].message.content
-        self.chat_history.append({'role': 'assistant', 'content': reply})
-
-        return reply
+        return ''
 
 
 USE_HINT_TEXT = os.environ.get('USE_HINT_TEXT', 'false').lower() == 'true'
@@ -90,16 +80,6 @@ AGENT_CLS_TO_FAKE_USER_RESPONSE_FN = {
 
 
 def fake_user_response(state: State) -> str:
-    #    last_agent_message = None
-    #    events = list(state.history.get_events())
-    #    for event in reversed(events):
-    #        if isinstance(event, MessageAction) and event.source == 'agent':
-    #            last_agent_message = event.content
-    #            break
-
-    #    if last_agent_message:
-    #        return fake_user.generate_reply(last_agent_message)
-    #    else:
     return 'Please continue working on the task.'
 
 
@@ -266,7 +246,6 @@ def initialize_runtime(
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
         raise RuntimeError(f'Failed to initialize runtime: {obs.content}')
-    # assert obs.exit_code == 0
 
     action = CmdRunAction(command="""export USER=$(whoami); echo USER=${USER} """)
     action.timeout = 600
@@ -343,24 +322,19 @@ def initialize_runtime(
         ), f'Failed to source /swe_util/swe_entry.sh: {obs.content}'
     try:
         action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
-        # action = CmdRunAction(command='cd /workspace/')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
     except Exception:
-        action = CmdRunAction(command='cd /workspace/')
+        alt_name = workspace_dir_name.rsplit('.0', 1)[0]
+        action = CmdRunAction(command=f'cd /workspace/{alt_name}')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
         logger.info(obs, extra={'msg_type': 'OBSERVATION'})
         assert obs.exit_code == 0
-        action = CmdRunAction(command='cd "$(ls | head -n 1)"')
-        action.timeout = 600
-        logger.info(action, extra={'msg_type': 'ACTION'})
-        obs = runtime.run_action(action)
-        logger.info(obs, extra={'msg_type': 'OBSERVATION'})
     if obs.exit_code != 0:
         logger.error(f'Command failed with exit code {obs.exit_code}: {obs.content}')
         # Handle the error appropriately, maybe by raising a custom exception
@@ -410,7 +384,6 @@ def complete_runtime(
     workspace_dir_name = _get_swebench_workspace_dir_name(instance)
     try:
         action = CmdRunAction(command=f'cd /workspace/{workspace_dir_name}')
-        # action = CmdRunAction(command='cd /workspace/')
         action.timeout = 600
         logger.info(action, extra={'msg_type': 'ACTION'})
         obs = runtime.run_action(action)
@@ -433,17 +406,6 @@ def complete_runtime(
         # Handle the error appropriately, maybe by raising a custom exception
         raise RuntimeError(f'Failed to initialize runtime: {obs.content}')
     assert obs.exit_code == 0
-    # assert_and_raise(
-    #     isinstance(obs, CmdOutputObservation) and obs.exit_code == 0,
-    #     f'Failed to cd to /workspace/{workspace_dir_name}: {str(obs)}',
-    # )
-
-    # action = CmdRunAction(command='cd "$(ls | head -n 1)"')
-    # action.timeout = 600
-    # logger.info(action, extra={'msg_type': 'ACTION'})
-    # obs = runtime.run_action(action)
-    # logger.info(obs, extra={'msg_type': 'OBSERVATION'})
-    # assert obs.exit_code == 0
 
     action = CmdRunAction(command='git config --global core.pager ""')
     action.timeout = 600
@@ -497,11 +459,6 @@ def process_instance(
 ) -> EvalOutput:
     config = get_config(instance, metadata)
     global fake_user
-    # df = pd.read_csv("data/fake_user_issues_under_0.csv")
-    # issue = df.loc[df['instance_id'] == instance["instance_id"], 'issue'].iloc[0]
-    # hidden_details_merged = df.loc[df['instance_id'] == instance["instance_id"], 'hidden_details'].iloc[0]
-    # fake_user = FakeUser(issue=original_issue, hidden_details=hidden_details_split)
-    # Setup the logger properly, so you can run multi-processing to parallelize the evaluation
     if reset_logger:
         log_dir = os.path.join(metadata.eval_output_dir, 'infer_logs')
         reset_logger_for_multiprocessing(logger, instance.instance_id, log_dir)
@@ -563,7 +520,6 @@ def process_instance(
     # remove when it becomes unnecessary
     histories = [event_to_dict(event) for event in state.history]
     metrics = state.metrics.get() if state.metrics else None
-    # num_turns = sum(1 for _ in state.history.get_events()) if state else 0
     # Save the output
     output = EvalOutput(
         instance_id=instance.instance_id,
@@ -574,7 +530,6 @@ def process_instance(
         history=histories,
         metrics=metrics,
         error=state.last_error if state and state.last_error else None,
-        # num_turns=num_turns,
     )
     return output
 
@@ -619,7 +574,6 @@ if __name__ == '__main__':
 
     # NOTE: It is preferable to load datasets from huggingface datasets and perform post-processing
     # so we don't need to manage file uploading to OpenHands's repo
-    #    dataset = load_dataset(args.dataset, split=args.split)
     csv_filepath = args.csv_file
     dataset = pd.read_excel(csv_filepath)
     logger.info(f'Loaded dataset from {csv_filepath}')
