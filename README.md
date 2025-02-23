@@ -58,7 +58,15 @@ The experiments are conducted using the [OpenHands agent framework](https://gith
 If you use this work, please cite our paper:
 
 ```
-
+@misc{vijayvargiya2025interactiveagentsovercomeambiguity,
+      title={Interactive Agents to Overcome Ambiguity in Software Engineering}, 
+      author={Sanidhya Vijayvargiya and Xuhui Zhou and Akhila Yerukola and Maarten Sap and Graham Neubig},
+      year={2025},
+      eprint={2502.13069},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2502.13069}, 
+}
 ```
 
 
