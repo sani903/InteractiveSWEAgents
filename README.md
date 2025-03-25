@@ -1,5 +1,5 @@
 
-# Interactive Agents To Overcome Ambiguity in Software Engineering
+# [Interactive Agents To Overcome Ambiguity in Software Engineering](https://arxiv.org/abs/2502.13069)
 
 This project focuses on interactive SWE agents in ambiguous settings. It evaluates how software engineering agents handle ambiguity through structured experiments.
 
