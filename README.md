@@ -3,7 +3,7 @@
 
 This project focuses on interactive SWE agents in ambiguous settings. It evaluates how software engineering agents handle ambiguity through structured experiments. 
 
-[PAPER](https://arxiv.org/abs/2502.13069)
+[Paper](https://arxiv.org/abs/2502.13069)
 
 ## 🛠 Setup
 
